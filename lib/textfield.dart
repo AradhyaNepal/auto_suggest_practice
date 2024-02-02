@@ -12,6 +12,7 @@ class AutocompleteBasicExample extends StatefulWidget {
 
 class _AutocompleteBasicExampleState extends State<AutocompleteBasicExample> {
   final _suggestionOpenedController = ValueNotifier(false);
+  final _globalKey=GlobalKey();
 
   @override
   void dispose() {
@@ -23,10 +24,7 @@ class _AutocompleteBasicExampleState extends State<AutocompleteBasicExample> {
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) => Autocomplete<String>(
-        // focusNode: focusNode,
-        // textEditingController: textEditingController,
         optionsViewBuilder: (context, onSelected, options) {
-          // debugger();
           return Align(
             alignment: Alignment.topLeft,
             child: Material(
@@ -46,13 +44,13 @@ class _AutocompleteBasicExampleState extends State<AutocompleteBasicExample> {
                       ],
                       color: Colors.white,
                     ),
-                    // height: 52.0 * options.length,
                     width: constraints.biggest.width,
                     child: SingleChildScrollView(
                         child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: options.map((opt) {
-                        return GestureDetector(
+                        return InkWell(//Todo: DO NOT USE GESTUREDETECTOR HERE, BAD TOUCHING EXPERIENCE TO THE USER
+                          splashColor: Colors.transparent,
                             onTap: () {
                               onSelected(opt);
                             },
@@ -70,49 +68,66 @@ class _AutocompleteBasicExampleState extends State<AutocompleteBasicExample> {
         },
         fieldViewBuilder:
             (context, textEditingController, focusNode, onFieldSubmitted) {
+
           // debugger();
 
-          focusNode.addListener(() {
-            if (focusNode.hasFocus !=
-                _suggestionOpenedController.value) {
-              // debugger();
-              _suggestionOpenedController.value=focusNode.hasFocus;
-              // debugger();
-            }
-          });
+          // focusNode.addListener(() {
+          //   if (focusNode.hasFocus !=
+          //       _suggestionOpenedController.value) {
+          //     // debugger();
+          //     _suggestionOpenedController.value=focusNode.hasFocus;
+          //     // debugger();
+          //   }
+          // });
           return ValueListenableBuilder(
             valueListenable: _suggestionOpenedController,
-            builder: (context,value,child){
+            builder: (context, value, child) {
               return Container(
                 decoration: _suggestionOpenedController.value
                     ? BoxDecoration(
-                  color: Colors.white,
-                  border: const Border(bottom: BorderSide.none),
-                  boxShadow: [
-                    BoxShadow(
-                      blurRadius: 4.r,
-                      offset: Offset(0, 4.h),
-                      color: const Color(0x10000000),
-                    )
-                  ],
-                )
+                        color: Colors.white,
+                        border: const Border(bottom: BorderSide.none),
+                        boxShadow: [
+                          BoxShadow(
+                            blurRadius: 4.r,
+                            offset: Offset(0, 4.h),
+                            color: const Color(0x10000000),
+                          )
+                        ],
+                      )
                     : null,
-                child:child??const SizedBox(),
+                child: child ?? const SizedBox(),
               );
             },
-            child: TextFormField(
-              controller: textEditingController,
-              focusNode: focusNode,
-              onFieldSubmitted: (_)=>onFieldSubmitted(),
+            child: Focus(//Just better way to Listen, in addListener we need to remove Listener too, else it might cause memory leaks
+              onFocusChange: (hasFocus){
+                //No need to check whether the value is checked
+                //Value notifier is smart enough to do it auto
+                _suggestionOpenedController.value=focusNode.hasFocus;
+              },
+              child: TextFormField(
+                key: _globalKey,
+                controller: textEditingController,
+                focusNode: focusNode,
+                onFieldSubmitted: (_) => onFieldSubmitted(),
+              ),
             ),
           );
         },
         optionsBuilder: (TextEditingValue textEditingValue) {
-          return kCountries
-              .where((element) => element.contains(textEditingValue.text));
+          final output= kCountries.where((element) => element
+              .toLowerCase()
+              .contains(textEditingValue.text.toLowerCase()));
+          return output;
         },
         onSelected: (String selection) {
-          _suggestionOpenedController.value = false;
+          // If you decided to not UnFocus on selected,
+          // then you should remove below code too else will cause UI mismatch
+          // i.e: on item selected background changes,
+          // but when you clear item and re-search the dropdown items will show
+          // but the background will not change
+          // FocusScope.of(context).unfocus();
+          // _suggestionOpenedController.value = false;
         },
       ),
     );
