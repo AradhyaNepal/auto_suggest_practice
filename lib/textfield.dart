@@ -1,21 +1,20 @@
 
 
 import 'package:auto_suggest/controller.dart';
+import 'package:auto_suggest/country.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 
 
-class AutocompleteBasicExample extends StatelessWidget {
+class AutocompleteBasicExample extends StatefulWidget {
   const AutocompleteBasicExample({super.key});
 
-  static const List<String> _kOptions = <String>[
-    'aardvark',
-    'bobcat',
-    'chameleon',
-  ];
+  @override
+  State<AutocompleteBasicExample> createState() => _AutocompleteBasicExampleState();
+}
 
-  //  FocusNode? focusNode;
+class _AutocompleteBasicExampleState extends State<AutocompleteBasicExample> {
   @override
   Widget build(BuildContext context) {
     final DynamicFieldController dynamicFieldController =
@@ -106,18 +105,10 @@ class AutocompleteBasicExample extends StatelessWidget {
               );
             },
             optionsBuilder: (TextEditingValue textEditingValue) {
-              // if (textEditingValue.text == '') {
-              //   return const Iterable<String>.empty();
-              // }
-              // return _kOptions.where((String option) {
-              //   return option.contains(textEditingValue.text.toLowerCase());
-              // });
-
-              return _kOptions;
+              return kCountries;
             },
             onSelected: (String selection) {
               dynamicFieldController.isSuggestionBoxOpen(false);
-              debugPrint('You just selected $selection');
             },
             ),
         );
